@@ -202,8 +202,6 @@ void processColorImages() {
                     minRects[i] = minAreaRect(contours[i]);
                 }
 
-                // post-process the found rectangles
-                // TODO
                 vector<RotatedRect> savedRects;
 
                 for (size_t k = 0; k < minRects.size(); k++) {
@@ -266,8 +264,11 @@ void processColorImages() {
 
                 // save processed image
                 // save corresponding data
-
-
+                String file_name =
+                    save_mono_files + colored_file_names[i - batch_size + j];
+                String file_name2 = file_name + "_interestpoint.tiff";
+                imwrite(file_name, src);
+                imwrite(file_name2, frame2);
 
             }
 
@@ -279,6 +280,9 @@ void processColorImages() {
 }
 
 void processMonoImages() {
+    // create dir to save proccessed images
+
+
     // counter variables
     size_t i, j;
     size_t mono_count = 0;
@@ -431,8 +435,11 @@ void processMonoImages() {
 
                 // save processed image
                 // save corresponding data
-
-
+                String file_name =
+                    save_mono_files + mono_file_names[i - batch_size + j];
+                String file_name2 = file_name + "_interestpoint.tiff";
+                imwrite(file_name, src);
+                imwrite(file_name2, frame2);
 
 
             }
@@ -445,11 +452,8 @@ void processMonoImages() {
 }
 
 
-
-
 int main(int argc, char** argv) {
-    /*
-    
+ 
     if (argumentHandler(argc, argv))
         return 1;
 
@@ -461,147 +465,6 @@ int main(int argc, char** argv) {
         cout << "Starting to Mono Images..." << endl;
         processMonoImages();
     }
-    
-    
-    */
-   
-    
-    Mat frame_threshold, frame_hsv, src_gray,srr, srcc,src = imread("D:/images/images/audit_49827_top.tiff");
-    Mat src_blur;
-    if (src.empty()) {
-        cout << "CANNOT READ" << endl;
-    }
 
-
-
-
-
-    int padding_y = src.rows * 0.01;
-    copyMakeBorder(src, src, padding_y, padding_y, 0, 0, BORDER_CONSTANT, Scalar(0,0,0));
-    GaussianBlur(src,src_blur, Size(7,7),3);
-    cvtColor(src_blur,src_gray,COLOR_BGR2GRAY);
-    Canny(src_gray, frame_threshold, 25, 90,3, true);
-    frame_hsv = frame_threshold.clone();
-    Mat canny_output = frame_threshold.clone();
-    
-    vector<vector<Point> > contours;
-    vector<Vec4i> hierarchy;
-    findContours(canny_output, contours, hierarchy,RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
-    
-    Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256));
-
-
-
-
-    Mat dst = Mat::zeros(src_blur.size(), CV_32FC1);
-    cornerHarris(frame_threshold, dst, blockSize, apertureSize, k);
-    Mat dst_norm, dst_norm_scaled;
-    normalize(dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
-    convertScaleAbs(dst_norm, dst_norm_scaled);
-    for (int i = 0; i < dst_norm.rows; i++) {
-        for (int j = 0; j < dst_norm.cols; j++) {
-            if ((int)dst_norm.at<float>(i, j) > thresh) {
-                int hold_max = (int)dst_norm.at<float>(i, j);
-                int search_max = (int)dst_norm.at<float>(i, j);
-                for (int k = -search_radius; k < search_radius; k++) {
-                    for (int l = -search_radius; l < search_radius; l++) {
-                        int xx = min(max(i + k, 0), dst_norm.rows);
-                        int yy = min(max(j + l, 0), dst_norm.cols);
-                        if ((int)dst_norm.at<float>(xx, yy) > search_max) {
-                            search_max = (int)dst_norm.at<float>(xx, yy);
-                        }
-                    }
-
-                }
-                if (search_max == hold_max) {
-                    circle(frame_hsv, Point(j, i), 35, color, 35, 8,
-                           0);
-                }
-
-            }
-        }
-    }
-
-
-     contours.clear();
-    hierarchy.clear();
-    findContours(frame_hsv, contours, hierarchy, RETR_TREE,
-                 CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-    vector<RotatedRect> minRects(contours.size());
-    for (size_t i = 0; i < contours.size(); i++) {
-        minRects[i] = minAreaRect(contours[i]);
-    }
-
-
-    Mat drawer = Mat::zeros(frame_hsv.size(), CV_8UC3);
-    
-    // post-process the found rectangles
-    // TODO
-    vector<RotatedRect> savedRects;
-
-    for (size_t k = 0; k < minRects.size(); k++) {
-        bool flag_save = true;
-        for (size_t l = 0; l < minRects.size(); l++) {
-            if ((norm(minRects[k].center - minRects[l].center) < margin) and
-                ((minRects[l].size.area() / minRects[k].size.area()) < area_ratio_threshold) and
-                (minRects[l].size.area() > minRects[k].size.area())) {
-                flag_save = false;
-                break;
-            }
-        }
-        if (flag_save) {
-            savedRects.push_back(minRects[k]);
-        }
-    }
-
-    for (size_t i = 0; i < savedRects.size(); i++) {
-
-        color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256),
-                       rng.uniform(0, 256));
-        // contour
-        //drawContours(drawer, contours, (int)i, color);
-        // rotated rectangle
-        Size rect_size = savedRects[i].size;
-
-        if ((rect_size.area() > 300000) and
-            (rect_size.area() < 9000000)) { // almost totally in or does not cover the whole area
-            Point2f rect_points[4];
-            savedRects[i].points(rect_points);
-            for (int j = 0; j < 4; j++) {
-                line(src, rect_points[j], rect_points[(j + 1) % 4], color,
-                     25);
-            }
-        }
-
-
-        else if(rect_size.area() > 200000) {
-            Point2f rect_center = savedRects[i].center;
-            int rect_x = rect_center.x, rect_y = rect_center.y; 
-            if (((rect_x < margin) or (rect_x > (src.rows - margin))) and
-                ((rect_y < margin) or (rect_y > (src.cols - margin)))) {
-            
-                Point2f rect_points[4];
-                savedRects[i].points(rect_points);
-                for (int j = 0; j < 4; j++) {
-                    line(src, rect_points[j], rect_points[(j + 1) % 4], color, 25);
-                }
-            }
-
-        }
-
-    }
-
-    namedWindow("BOX2", WINDOW_NORMAL);
-    resizeWindow("BOX2", 800, 800);
-    imshow("BOX2", src);
-
-
-    namedWindow("Approx.", WINDOW_NORMAL);
-    resizeWindow("Approx.", 800, 800);
-    imshow("Approx." ,frame_hsv);
-
-    waitKey(0);
-    
     return 0;
 }
