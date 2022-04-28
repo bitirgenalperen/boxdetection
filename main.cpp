@@ -27,27 +27,6 @@ double k = 0.06;
 RNG rng(12345);
 
 
-class Box {
-    vector<Point2f> corner_coords;
-    float width = 0, height = 0;
-    float mean_intens_router = 0, mean_cont_diff = 0, mean_strength_edges = 0;
-
-public:
-    Box() {
-    }
-};
-
-class ImageDetectionContainer {
-    Mat img;
-    vector<Box> containing_boxes;
-
-public:
-    ImageDetectionContainer(Mat src) { 
-        this->img = src;
-    }
-};
-
-
 int argumentHandler(int arg_count, char** given_args) {
     // argument handling
     // argv[1] :: Image color variation(color, mono, both) (color_var)
@@ -64,14 +43,14 @@ int argumentHandler(int arg_count, char** given_args) {
         if (color_var >= 1) { // color files
             color_states[1] = 1;
             retrieve_color_files = retrieve_dir_name + "/images/*.tiff";
-            save_color_files = save_dir_name + "/images/";
+            save_color_files = retrieve_dir_name + "/images/";
             cout << "Retrieve Colored Images: " << retrieve_color_files << endl;
             cout << "Save Colored Images: " << save_color_files << endl;
         }
         if (color_var <= -1) { // mono files
             color_states[0] = 1;
             retrieve_mono_files = retrieve_dir_name + "/images_mono/*.tiff";
-            save_mono_files = save_dir_name + "/images_mono/";
+            save_mono_files = retrieve_dir_name + "/images_mono/";
             cout << "Retrieve Mono Images: " << retrieve_mono_files << endl;
             cout << "Save Mono Images: " << save_mono_files << endl;
         }
@@ -117,6 +96,7 @@ void gammaCorrection(const Mat& src, Mat& dst, const float gamma) {
 
 
 void processColorImages() {
+
     // counter variables
     size_t i, j;
     size_t color_count = 0;
@@ -264,12 +244,11 @@ void processColorImages() {
 
                 // save processed image
                 // save corresponding data
-                String file_name =
-                    save_mono_files + colored_file_names[i - batch_size + j];
-                String file_name2 = file_name + "_interestpoint.tiff";
+                String file_name = "processed_" + save_color_files +
+                                   colored_file_names[i - batch_size + j];
+                String file_name2 = "interestpoint_" + file_name;
                 imwrite(file_name, src);
                 imwrite(file_name2, frame2);
-
             }
 
             cout << "Clear vector" << endl;
@@ -280,9 +259,6 @@ void processColorImages() {
 }
 
 void processMonoImages() {
-    // create dir to save proccessed images
-
-
     // counter variables
     size_t i, j;
     size_t mono_count = 0;
@@ -436,8 +412,8 @@ void processMonoImages() {
                 // save processed image
                 // save corresponding data
                 String file_name =
-                    save_mono_files + mono_file_names[i - batch_size + j];
-                String file_name2 = file_name + "_interestpoint.tiff";
+                    "processed_" + save_mono_files + mono_file_names[i - batch_size + j];
+                String file_name2 = "interestpoint_" +  file_name;
                 imwrite(file_name, src);
                 imwrite(file_name2, frame2);
 
