@@ -32,8 +32,8 @@ int argumentHandler(int arg_count, char** given_args) {
     // argument handling
     // argv[1] :: Image color variation(color, mono, both) (color_var)
     // argv[2] :: Name of the directory to retrieve images (retrieve_dir_name)
-    // argv[3] :: Name of the directory to save the images with bounding boxes
-    // (save_dir_name) argv[4] :: Batch size (batch_size)
+    // argv[3] :: Name of the directory to save the images with bounding boxes (save_dir_name)
+    // argv[4] :: Batch size (batch_size)
     if (arg_count > 4) {
         cout << "You have entered " << arg_count - 1 << " arguments:" << endl;
         color_var = atoi(given_args[1]);
