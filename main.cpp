@@ -124,6 +124,7 @@ void processImages(String get_dir, String save_dir) {
             for (n = 0; n < batch_size; n++) {
                 Mat src, src_blur, src_gray;
                 Mat frame1, frame2, canny_output;
+                Scalar color;
                 src = images[n];
 
                 // color adjustments
@@ -135,13 +136,10 @@ void processImages(String get_dir, String save_dir) {
                 GaussianBlur(frame1, frame1, Size(5, 5), 3);
                 frame2 = frame1.clone();
                 canny_output = frame1.clone();
+
+                //
                 vector<vector<Point> > contours;
                 vector<Vec4i> hierarchy;
-                findContours(canny_output, contours, hierarchy, RETR_TREE,
-                             CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-                Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256),
-                                      rng.uniform(0, 256));
 
                 findContours(frame2, contours, hierarchy, RETR_TREE,
                              CHAIN_APPROX_SIMPLE, Point(0, 0));
@@ -185,11 +183,12 @@ void processImages(String get_dir, String save_dir) {
                         }
                     }
                 }
+
+                // filter the overlapping rectangles
                 vector<int> filter(bestFits.size());
                 for (size_t i = 0; i < bestFits.size(); i++) {
                     filter[i] = 1;
                 }
-                cout << "HELLO2" << endl;
                 for (int i = bestFits.size() - 1; i >= 0; i--) {
                     RotatedRect cur_rect = bestFits[i];
                     bool bounding = false;
@@ -214,7 +213,7 @@ void processImages(String get_dir, String save_dir) {
                         }
                     }
                 }
-                cout << "HELLO1" << endl;
+                //write the details on image
                 for (size_t i = 0; i < bestFits.size(); i++) {
                     if (filter[i] == 1) {
                         RotatedRect cur_rect = bestFits[i];
@@ -252,15 +251,9 @@ void processImages(String get_dir, String save_dir) {
                                   cur_rect.center.y),
                             1, 8, Scalar(0, 0, 255), 10);
                     }
-                    cout << "HELLO" << endl;
                     // save processed image
                     // save corresponding data
-                    cout << save_dir + "processed_" << endl;
-                    cout << m << " :: " << n << endl;
-                    cout << m - batch_size + n << endl;
                     String file_name = file_names[m - batch_size + n + 1];
-                    cout << file_name << endl;
-
                     imwrite(file_name, src);
                 }
 
